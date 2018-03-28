@@ -1,25 +1,47 @@
-var container = document.createElement('div');
-container.id = 'xc-container';
-document.body.appendChild(container);
-
-var pageUpButton = document.createElement('div');
-pageUpButton.id = 'xc-pageup';
-container.appendChild(pageUpButton);
-
-var pageDownButton = document.createElement('div');
-pageDownButton.id = 'xc-pagedown';
-container.appendChild(pageDownButton);
-
-
-pageUpButton.innerText = '▲';
-pageUpButton.onclick = function() {
-  window.scrollTo(0, window.scrollY - window.innerHeight * .9);
+function getButton(container, id, label, handler) {
+  var button = document.getElementById(id);
+  if (!button) {
+    button = document.createElement('div');
+    button.id = id;
+    if (label)
+      button.innerText = label;
+    if (handler)
+      button.onclick = handler;
+    container.appendChild(button);
+  }
+  return button;
 };
 
-pageDownButton.innerText = '▼';
-pageDownButton.onclick = function() {
-  window.scrollTo(0, window.scrollY + window.innerHeight * .9);
+function maybeSetupButtons() {
+  var container = getButton(
+      document.body, 'xc-container', undefined /*label*/,
+      undefined /*handler*/);
+
+  var pageUpButton = getButton(container, 'xc-pageup', '▲', function() {
+    window.scrollTo(0, window.scrollY - window.innerHeight * .9);
+  });
+
+  var pageDownButton = getButton(container, 'xc-pagedown', '▼', function() {
+    window.scrollTo(0, window.scrollY + window.innerHeight * .9);
+  });
+
+  var backButton = getButton(container, 'xc-backbutton', '◀', function() {
+    window.history.back();
+  });
+
+  if (document.body.scrollHeight > window.innerHeight) {
+    container.style.display = 'block';
+    container.style.top =
+        Math.max(
+            0, window.innerHeight - Math.max(window.innerHeight * .2, 160)) +
+        'px';
+    container.style.left = window.innerWidth - 160 + 'px';
+  } else {
+    // No need to scroll.
+    container.style.display = 'none';
+  }
 };
 
-container.style.top = window.innerHeight * .8 + 'px';
-container.style.left = window.innerWidth - 100 + 'px';
+
+window.onresize = maybeSetupButtons;
+maybeSetupButtons();
