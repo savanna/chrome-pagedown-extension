@@ -25,17 +25,13 @@ function maybeSetupButtons() {
     window.scrollTo(0, window.scrollY + window.innerHeight * .9);
   });
 
-  var backButton = getButton(container, 'xc-backbutton', '◀', function() {
-    window.history.back();
-  });
-
   if (document.body.scrollHeight > window.innerHeight) {
     container.style.display = 'block';
     container.style.top =
         Math.max(
             0, window.innerHeight - Math.max(window.innerHeight * .2, 160)) +
         'px';
-    container.style.left = window.innerWidth - 160 + 'px';
+    container.style.left = window.innerWidth - 96 + 'px';
   } else {
     // No need to scroll.
     container.style.display = 'none';

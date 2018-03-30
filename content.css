@@ -1,8 +1,10 @@
 #xc-container {
-  background-color: rgba(0, 0, 0, 0);
+  background-color: rgba(100, 100, 100, .5);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
   border: 0px;
+  border-radius: 32px;
   box-sizing: content-box;
-  width: 128px;
+  width: 64px;
   height: 128px;
   z-index: 2147483643;
   margin: 0px;
@@ -11,48 +13,19 @@
 }
 
 #xc-pageup,
-#xc-pagedown,
-#xc-backbutton {
-  border-radius: 32px;
-  background-color: rgba(100, 100, 100, .2);
+#xc-pagedown {
   cursor: pointer;
-  color: rgba(0, 0, 100, 0.5);
+  color: rgba(0, 0, 0, 0.5);
   font-size: 64px;
+  line-height: 64px;
   font-family: "Open Sans", sans-serif;
   border: 0px;
   width: 50%;
   height: 50%;
   margin: 0px;
-  position: absolute;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
-}
-
-#xc-pageup,
-#xc-pagedown {
-  left: 64px;
-}
-
-#xc-pageup {
-  top: 0px;
-  line-height: 51px;
-}
-
-#xc-pagedown {
-  top: 64px;
-  line-height: 68px;
-}
-
-#xc-backbutton {
-  top: 32px;
-  left: 8px;
-  font-size: 50px;
-  text-align: left;
-  padding-left: 9px;
-  line-height: 60px;
 }
 
 #xc-pageup:active,
-#xc-pagedown:active,
-#xc-backbutton:active {
-  color: rgba(0, 0, 255, 1);
+#xc-pagedown:active {
+  color: rgba(0, 0, 0, 1);
 }
