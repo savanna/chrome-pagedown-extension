@@ -1,12 +1,25 @@
+function isTouchDevice() {
+  return 'ontouchstart' in document.documentElement;
+}
+
 function getButton(container, id, label, handler) {
   var button = document.getElementById(id);
   if (!button) {
     button = document.createElement('div');
     button.id = id;
-    if (label)
+    if (label) {
       button.innerText = label;
-    if (handler)
+    }
+    if (handler) {
       button.onclick = handler;
+    }
+    if (isTouchDevice()) {
+      // prevent long press context menu.
+      button.oncontextmenu = function(e) {
+        e.preventDefault();
+        return false;
+      }
+    }
     container.appendChild(button);
   }
   return button;
