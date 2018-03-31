@@ -15,8 +15,39 @@
             window.scrollTo(0, window.scrollY + window.innerHeight * .9);
           });
 
-      window.onresize = this.updatePosition;
+      window.onresize = this.updatePosition.bind(this);
       this.updatePosition();
+
+      this.container.ontouchstart = function(e) {
+        this.touchStartTime = new Date();
+        let {x, y} = MainUI.getLocation();
+        this.touchStartOffset = {x: x - e.screenX, y: y - e.screenY};
+      }.bind(this);
+      this.container.onmousedown = this.container.ontouchstart;
+
+      this.container.ontouchend = function(e) {
+        this.touchStartTime = undefined;
+      }.bind(this);
+      window.addEventListener('mouseup', this.container.ontouchend);
+
+      this.container.ontouchcancel = function() {
+        this.touchStartTime = undefined;
+      }.bind(this);
+
+      let ontouchmove = function(e) {
+        if (!this.touchStartTime)
+          return;
+
+        var now = new Date().getTime();
+        if (now - this.touchStartTime.getTime() > 2 * 1000) {
+          MainUI.setLocation(
+              e.screenX + this.touchStartOffset.x,
+              e.screenY + this.touchStartOffset.y);
+          this.updatePosition();
+        }
+      }.bind(this)
+      window.addEventListener('touchmove', ontouchmove);
+      window.addEventListener('mousemove', ontouchmove);
     }
 
     static isTouchDevice() {
@@ -43,15 +74,40 @@
       return button;
     }
 
+    static setLocation(x, y) {
+      localStorage.setItem('xc_x', x);
+      localStorage.setItem('xc_y', y);
+    }
+
+    static getLocation() {
+      let x = localStorage.getItem('xc_x');
+      let y = localStorage.getItem('xc_y');
+
+      if (isNaN(x) || isNaN(y)) {
+        let {x, y} = MainUI.initLocation();
+        MainUI.setLocation(x, y);
+      }
+
+      let loc = {
+        x: Math.min(window.innerWidth - 50, Math.max(0, x)),
+        y: Math.min(window.innerHeight - 100, Math.max(0, y))
+      };
+      return loc;
+    }
+
+    static initLocation() {
+      let x = window.innerWidth - 96;
+      let y = Math.max(
+          0, window.innerHeight - Math.max(window.innerHeight * .4, 160));
+      return {x, y};
+    }
+
     updatePosition() {
       if (document.body.scrollHeight > window.innerHeight) {
         this.container.style.display = 'block';
-        this.container.style.top =
-            Math.max(
-                0,
-                window.innerHeight - Math.max(window.innerHeight * .2, 160)) +
-            'px';
-        this.container.style.left = window.innerWidth - 96 + 'px';
+        let {x, y} = MainUI.getLocation();
+        this.container.style.left = x + 'px';
+        this.container.style.top = y + 'px';
       } else {
         // No need to scroll.
         this.container.style.display = 'none';
