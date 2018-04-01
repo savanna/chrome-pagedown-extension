@@ -1,4 +1,6 @@
 {
+  let MOVE_START_DELAY_MS = 2 * 1000;
+
   class MainUI {
     constructor() {
       this.container = MainUI.createButton(
@@ -20,7 +22,7 @@
 
       this.container.ontouchstart = function(e) {
         e = MainUI.getScreenEvent(e);
-        this.touchStartTime = new Date();
+        this.touchStartTime = new Date().getTime();
         let {x, y} = MainUI.getLocation();
         this.touchStartOffset = {x: x - e.screenX, y: y - e.screenY};
       }.bind(this);
@@ -31,6 +33,16 @@
       }.bind(this);
       window.addEventListener('mouseup', this.container.ontouchend);
 
+      this.container.onmouseleave = function(e) {
+        console.info('mouse leave');
+
+        var now = new Date().getTime();
+        if (this.touchStartTime &&
+            (now - this.touchStartTime < MOVE_START_DELAY_MS)) {
+          this.touchStartTime = undefined;
+        }
+      }.bind(this);
+
       this.container.ontouchcancel = function() {
         this.touchStartTime = undefined;
       }.bind(this);
@@ -40,9 +52,15 @@
           return;
 
         console.info('touch move');
-        e = getScreenEvent(e);
+        if ('path' in e) {
+          // TouchEvent
+          if (!(this.container in e.path)) {
+            this.container.onmouseleave();
+          }
+        }
+        e = MainUI.getScreenEvent(e);
         var now = new Date().getTime();
-        if (now - this.touchStartTime.getTime() > 2 * 1000) {
+        if (now - this.touchStartTime > MOVE_START_DELAY_MS) {
           MainUI.setLocation(
               e.screenX + this.touchStartOffset.x,
               e.screenY + this.touchStartOffset.y);
