@@ -19,6 +19,7 @@
       this.updatePosition();
 
       this.container.ontouchstart = function(e) {
+        e = MainUI.getScreenEvent(e);
         this.touchStartTime = new Date();
         let {x, y} = MainUI.getLocation();
         this.touchStartOffset = {x: x - e.screenX, y: y - e.screenY};
@@ -38,6 +39,8 @@
         if (!this.touchStartTime)
           return;
 
+        console.info('touch move');
+        e = getScreenEvent(e);
         var now = new Date().getTime();
         if (now - this.touchStartTime.getTime() > 2 * 1000) {
           MainUI.setLocation(
@@ -83,8 +86,10 @@
       let x = localStorage.getItem('xc_x');
       let y = localStorage.getItem('xc_y');
 
-      if (isNaN(x) || isNaN(y)) {
-        let {x, y} = MainUI.initLocation();
+      if (!x || isNaN(x) || !y || isNaN(y)) {
+        var initLocation = MainUI.initLocation();
+        x = initLocation.x;
+        y = initLocation.y;
         MainUI.setLocation(x, y);
       }
 
@@ -93,6 +98,20 @@
         y: Math.min(window.innerHeight - 100, Math.max(0, y))
       };
       return loc;
+    }
+
+    static getScreenEvent(e) {
+      if ('screenX' in e) {
+        return e;
+      }
+
+      if ('screenX' in e.targetTouches[0]) {
+        return e.targetTouches[0];
+      }
+
+      if ('screenX' in e.changedTouches[0]) {
+        return e.changedTouches[0];
+      }
     }
 
     static initLocation() {
@@ -108,6 +127,8 @@
         let {x, y} = MainUI.getLocation();
         this.container.style.left = x + 'px';
         this.container.style.top = y + 'px';
+        console.info('update location');
+        console.info({x, y});
       } else {
         // No need to scroll.
         this.container.style.display = 'none';
