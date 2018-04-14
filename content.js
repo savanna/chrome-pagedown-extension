@@ -1,5 +1,7 @@
 {
   let MOVE_START_DELAY_MS = 2 * 1000;
+  let PAGE_PERCENT = .92;
+  let PAGE_ANIMATION_DURATION_MS = 200.0;
 
   class MainUI {
     constructor() {
@@ -7,15 +9,11 @@
           document.body, 'xc-container', undefined /*label*/,
           undefined /*handler*/);
 
-      this.pageUpButton =
-          MainUI.createButton(this.container, 'xc-pageup', '▲', function() {
-            window.scrollTo(0, window.scrollY - window.innerHeight * .9);
-          });
+      this.pageUpButton = MainUI.createButton(
+          this.container, 'xc-pageup', '▲', this.scrollPage.bind(this, -1));
 
-      this.pageDownButton =
-          MainUI.createButton(this.container, 'xc-pagedown', '▼', function() {
-            window.scrollTo(0, window.scrollY + window.innerHeight * .9);
-          });
+      this.pageDownButton = MainUI.createButton(
+          this.container, 'xc-pagedown', '▼', this.scrollPage.bind(this, 1));
 
       window.onresize = this.updatePosition.bind(this);
       this.updatePosition();
@@ -34,8 +32,6 @@
       window.addEventListener('mouseup', this.container.ontouchend);
 
       this.container.onmouseleave = function(e) {
-        console.info('mouse leave');
-
         var now = new Date().getTime();
         if (this.touchStartTime &&
             (now - this.touchStartTime < MOVE_START_DELAY_MS)) {
@@ -51,10 +47,9 @@
         if (!this.touchStartTime)
           return;
 
-        console.info('touch move');
         if ('path' in e) {
-          // TouchEvent
-          if (!(this.container in e.path)) {
+          // TouchEvent, and finger moved out.
+          if (!e.path.includes(this.container)) {
             this.container.onmouseleave();
           }
         }
@@ -139,14 +134,32 @@
       return {x, y};
     }
 
+    scrollPage(direction) {
+      var startY = window.scrollY;
+      var difference = direction * window.innerHeight * PAGE_PERCENT;
+      var startTime = performance.now();
+
+      function step() {
+        var normalizedTime =
+            (performance.now() - startTime) / PAGE_ANIMATION_DURATION_MS;
+        if (normalizedTime > 1)
+          normalizedTime = 1;
+
+        window.scrollTo(
+            0, startY + difference * Math.sin(normalizedTime * Math.PI / 2));
+        if (normalizedTime < 1) {
+          window.requestAnimationFrame(step);
+        }
+      }
+      window.requestAnimationFrame(step);
+    }
+
     updatePosition() {
       if (document.body.scrollHeight > window.innerHeight) {
         this.container.style.display = 'block';
         let {x, y} = MainUI.getLocation();
         this.container.style.left = x + 'px';
         this.container.style.top = y + 'px';
-        console.info('update location');
-        console.info({x, y});
       } else {
         // No need to scroll.
         this.container.style.display = 'none';
