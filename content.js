@@ -16,17 +16,22 @@
           this.container, 'xc-pagedown', '▼', this.scrollPage.bind(this, 1));
 
       window.onresize = this.updatePosition.bind(this);
-      this.updatePosition();
+      this.readLocation();
 
       this.container.ontouchstart = function(e) {
         e = MainUI.getScreenEvent(e);
         this.touchStartTime = new Date().getTime();
-        let {x, y} = MainUI.getLocation();
-        this.touchStartOffset = {x: x - e.screenX, y: y - e.screenY};
+        this.touchStartOffset = {x: this.x - e.screenX, y: this.y - e.screenY};
       }.bind(this);
       this.container.onmousedown = this.container.ontouchstart;
 
       this.container.ontouchend = function(e) {
+        var now = new Date().getTime();
+        if (this.touchStartTime &&
+            (now - this.touchStartTime) > MOVE_START_DELAY_MS) {
+          this.saveLocation();
+        }
+
         this.touchStartTime = undefined;
       }.bind(this);
       window.addEventListener('mouseup', this.container.ontouchend);
@@ -56,7 +61,7 @@
         e = MainUI.getScreenEvent(e);
         var now = new Date().getTime();
         if (now - this.touchStartTime > MOVE_START_DELAY_MS) {
-          MainUI.setLocation(
+          this.setLocation(
               e.screenX + this.touchStartOffset.x,
               e.screenY + this.touchStartOffset.y);
           this.updatePosition();
@@ -90,27 +95,34 @@
       return button;
     }
 
-    static setLocation(x, y) {
-      localStorage.setItem('xc_x', x);
-      localStorage.setItem('xc_y', y);
+    setLocation(x, y) {
+      this.x = x;
+      this.y = y;
     }
 
-    static getLocation() {
-      let x = localStorage.getItem('xc_x');
-      let y = localStorage.getItem('xc_y');
+    saveLocation() {
+      chrome.runtime.sendMessage({
+        name: 'setLocation',
+        data: {
+          x: this.x,
+          y: this.y,
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      });
+    }
 
-      if (!x || isNaN(x) || !y || isNaN(y)) {
-        var initLocation = MainUI.initLocation();
-        x = initLocation.x;
-        y = initLocation.y;
-        MainUI.setLocation(x, y);
-      }
-
-      let loc = {
-        x: Math.min(window.innerWidth - 50, Math.max(0, x)),
-        y: Math.min(window.innerHeight - 100, Math.max(0, y))
-      };
-      return loc;
+    readLocation() {
+      chrome.runtime.sendMessage(
+          {
+            name: 'getLocation',
+            data: {width: window.innerWidth, height: window.innerHeight}
+          },
+          (loc) => {
+            this.x = loc.x;
+            this.y = loc.y;
+            this.updatePosition();
+          });
     }
 
     static getScreenEvent(e) {
@@ -125,13 +137,6 @@
       if ('screenX' in e.changedTouches[0]) {
         return e.changedTouches[0];
       }
-    }
-
-    static initLocation() {
-      let x = window.innerWidth - 96;
-      let y = Math.max(
-          0, window.innerHeight - Math.max(window.innerHeight * .4, 160));
-      return {x, y};
     }
 
     scrollPage(direction) {
@@ -155,11 +160,14 @@
     }
 
     updatePosition() {
+      if (this.x === undefined || this.y === undefined) {
+        return;
+      }
+
       if (document.body.scrollHeight > window.innerHeight) {
         this.container.style.display = 'block';
-        let {x, y} = MainUI.getLocation();
-        this.container.style.left = x + 'px';
-        this.container.style.top = y + 'px';
+        this.container.style.left = this.x + 'px';
+        this.container.style.top = this.y + 'px';
       } else {
         // No need to scroll.
         this.container.style.display = 'none';
