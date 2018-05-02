@@ -20,8 +20,7 @@
 
       this.container.ontouchstart = function(e) {
         e = MainUI.getScreenEvent(e);
-        this.touchStartTime = new Date().getTime();
-        this.touchStartOffset = {x: this.x - e.screenX, y: this.y - e.screenY};
+        this.setTouchStart(e.screenX, e.screenY);
       }.bind(this);
       this.container.onmousedown = this.container.ontouchstart;
 
@@ -32,7 +31,7 @@
           this.saveLocation();
         }
 
-        this.touchStartTime = undefined;
+        this.setTouchEnd();
       }.bind(this);
       window.addEventListener('mouseup', this.container.ontouchend);
 
@@ -40,13 +39,11 @@
         var now = new Date().getTime();
         if (this.touchStartTime &&
             (now - this.touchStartTime < MOVE_START_DELAY_MS)) {
-          this.touchStartTime = undefined;
+          this.setTouchEnd();
         }
       }.bind(this);
 
-      this.container.ontouchcancel = function() {
-        this.touchStartTime = undefined;
-      }.bind(this);
+      this.container.ontouchcancel = this.setTouchEnd.bind(this);
 
       let ontouchmove = function(e) {
         if (!this.touchStartTime)
@@ -95,6 +92,29 @@
       return button;
     }
 
+    setTouchStart(screenX, screenY) {
+      this.touchStartTime = new Date().getTime();
+      this.touchStartOffset = {x: this.x - screenX, y: this.y - screenY};
+      this.moveTimerId = window.setTimeout(() => {
+        this.container.classList.add('large');
+        this.moveTimerId = undefined;
+      }, MOVE_START_DELAY_MS);
+    }
+
+    setTouchEnd() {
+      this.touchStartTime = undefined;
+      this.touchStartOffset = undefined;
+      if (this.moveTimerId) {
+        window.clearTimeout(this.moveTimerId);
+        this.moveTimerId = undefined;
+      }
+
+      if (this.container.classList.contains('large')) {
+        this.container.classList.remove('large');
+        this.lastLargeTime = new Date().getTime();
+      }
+    }
+
     setLocation(x, y) {
       this.x = x;
       this.y = y;
@@ -140,6 +160,11 @@
     }
 
     scrollPage(direction) {
+      let now = new Date().getTime();
+      if (now - this.lastLargeTime < 10) {
+        // Just come out of a move, ignore the scroll
+        return;
+      }
       var startY = window.scrollY;
       var difference = direction * window.innerHeight * PAGE_PERCENT;
       var startTime = performance.now();

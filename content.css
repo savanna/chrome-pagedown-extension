@@ -12,6 +12,12 @@
   user-select: none;
 }
 
+#xc-container.large {
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 5px 15px 0px;
+  transform: scale(1.2, 1.2);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
 #xc-pageup,
 #xc-pagedown {
   cursor: pointer;
