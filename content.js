@@ -1,19 +1,18 @@
 {
-  let MOVE_START_DELAY_MS = 2 * 1000;
+  let MOVE_START_DELAY_MS = 1 * 1000;
   let PAGE_PERCENT = .92;
   let PAGE_ANIMATION_DURATION_MS = 200.0;
 
   class MainUI {
     constructor() {
       this.container = MainUI.createButton(
-          document.body, 'xc-container', undefined /*label*/,
-          undefined /*handler*/);
+          document.body, 'xc-container', undefined /*handler*/);
 
       this.pageUpButton = MainUI.createButton(
-          this.container, 'xc-pageup', '▲', this.scrollPage.bind(this, -1));
+          this.container, 'xc-pageup', this.scrollPage.bind(this, -1));
 
       this.pageDownButton = MainUI.createButton(
-          this.container, 'xc-pagedown', '▼', this.scrollPage.bind(this, 1));
+          this.container, 'xc-pagedown', this.scrollPage.bind(this, 1));
 
       window.onresize = this.updatePosition.bind(this);
       this.readLocation();
@@ -72,12 +71,9 @@
       return 'ontouchstart' in document.documentElement;
     }
 
-    static createButton(container, id, label, handler) {
+    static createButton(container, id, handler) {
       let button = document.createElement('div');
       button.id = id;
-      if (label) {
-        button.innerText = label;
-      }
       if (handler) {
         button.onclick = handler;
       }
