@@ -20,6 +20,8 @@
       this.container.ontouchstart = function(e) {
         e = MainUI.getScreenEvent(e);
         this.setTouchStart(e.screenX, e.screenY);
+        e.stopPropagation();
+        e.preventDefault();
       }.bind(this);
       this.container.onmousedown = this.container.ontouchstart;
 
@@ -61,6 +63,8 @@
               e.screenX + this.touchStartOffset.x,
               e.screenY + this.touchStartOffset.y);
           this.updatePosition();
+          e.stopPropagation();
+          e.preventDefault();
         }
       }.bind(this)
       window.addEventListener('touchmove', ontouchmove);
