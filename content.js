@@ -17,13 +17,22 @@
       window.onresize = this.updatePosition.bind(this);
       this.readLocation();
 
+      // These "ontouch..." event handler method does not seem to work anymore.
+      // Need to explicitely |addEventListener|.
       this.container.ontouchstart = function(e) {
-        e = MainUI.getScreenEvent(e);
-        this.setTouchStart(e.screenX, e.screenY);
+        if (e.which == 3) {
+            // right click, this will trigger context menu and we won't get anymore
+            // events, so ignore it.
+            return;
+        }
+        var screenEvent = MainUI.getScreenEvent(e);
+        this.setTouchStart(screenEvent.screenX, screenEvent.screenY);
+
         e.stopPropagation();
         e.preventDefault();
       }.bind(this);
       this.container.onmousedown = this.container.ontouchstart;
+      this.container.addEventListener('touchstart', this.container.ontouchstart);
 
       this.container.ontouchend = function(e) {
         var now = new Date().getTime();
@@ -35,6 +44,7 @@
         this.setTouchEnd();
       }.bind(this);
       window.addEventListener('mouseup', this.container.ontouchend);
+      this.container.addEventListener('touchend', this.container.ontouchend);
 
       this.container.onmouseleave = function(e) {
         var now = new Date().getTime();
@@ -44,7 +54,7 @@
         }
       }.bind(this);
 
-      this.container.ontouchcancel = this.setTouchEnd.bind(this);
+      this.container.addEventListener('touchcancel', this.setTouchEnd.bind(this));
 
       let ontouchmove = function(e) {
         if (!this.touchStartTime)
@@ -56,17 +66,16 @@
             this.container.onmouseleave();
           }
         }
-        e = MainUI.getScreenEvent(e);
+        var screenEvent = MainUI.getScreenEvent(e);
         var now = new Date().getTime();
         if (now - this.touchStartTime > MOVE_START_DELAY_MS) {
           this.setLocation(
-              e.screenX + this.touchStartOffset.x,
-              e.screenY + this.touchStartOffset.y);
+              screenEvent.screenX + this.touchStartOffset.x,
+              screenEvent.screenY + this.touchStartOffset.y);
           this.updatePosition();
           e.stopPropagation();
-          e.preventDefault();
         }
-      }.bind(this)
+      }.bind(this);
       window.addEventListener('touchmove', ontouchmove);
       window.addEventListener('mousemove', ontouchmove);
     }
