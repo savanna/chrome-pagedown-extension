@@ -8,6 +8,12 @@
       this.container = MainUI.createButton(
           document.body, 'xc-container', undefined /*handler*/);
 
+      // prevent long press context menu.
+      this.container.oncontextmenu = function(e) {
+        e.preventDefault();
+        return false;
+      }
+
       this.pageUpButton = MainUI.createButton(
           this.container, 'xc-pageup', this.scrollPage.bind(this, -1));
 
@@ -29,7 +35,6 @@
         this.setTouchStart(screenEvent.screenX, screenEvent.screenY);
 
         e.stopPropagation();
-        e.preventDefault();
       }.bind(this);
       this.container.onmousedown = this.container.ontouchstart;
       this.container.addEventListener('touchstart', this.container.ontouchstart);
@@ -74,14 +79,12 @@
               screenEvent.screenY + this.touchStartOffset.y);
           this.updatePosition();
           e.stopPropagation();
+          // This prevents moving the underlying page at the same time.
+          e.preventDefault();
         }
       }.bind(this);
-      window.addEventListener('touchmove', ontouchmove);
+      window.addEventListener('touchmove', ontouchmove, {passive: false});
       window.addEventListener('mousemove', ontouchmove);
-    }
-
-    static isTouchDevice() {
-      return 'ontouchstart' in document.documentElement;
     }
 
     static createButton(container, id, handler) {
@@ -90,13 +93,7 @@
       if (handler) {
         button.onclick = handler;
       }
-      if (MainUI.isTouchDevice()) {
-        // prevent long press context menu.
-        button.oncontextmenu = function(e) {
-          e.preventDefault();
-          return false;
-        }
-      }
+
       container.appendChild(button);
       return button;
     }
